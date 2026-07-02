@@ -1,93 +1,116 @@
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
-from typing import Any, Optional
+from enum import Enum
+from typing import Any
 
 from .constants import (
-    DEFAULT_CONTEXT_MODALITY,
+    DEFAULT_CONTEXT_TYPE,
     DEFAULT_SCHEMA_VERSION,
-    Complexity,
-    Decision,
-    Operation,
+    ComplexityLevel,
+    DecisionType,
+    OperationGroup,
 )
 
 
-@dataclass(frozen=True)
-class Document:
-    """Source document loaded before context construction."""
+def _to_plain_value(value: Any) -> Any:
+    """Convert dataclass and enum values into plain Python containers."""
 
-    content: str
-    id: Optional[str] = None
-    source: Optional[str] = None
-    metadata: dict[str, Any] = field(default_factory=dict)
+    if isinstance(value, Enum):
+        return value.value
+    if isinstance(value, datetime):
+        return value.isoformat()
+    if isinstance(value, dict):
+        return {key: _to_plain_value(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_to_plain_value(item) for item in value]
+    return value
 
 
-@dataclass(frozen=True)
+@dataclass
 class Metadata:
     """Technical metadata for a canonical dataset example."""
 
     id: str
-    domain: str
-    language: str
-    operations: tuple[Operation, ...]
-    complexity: Complexity
     version: str = DEFAULT_SCHEMA_VERSION
-    source: Optional[str] = None
+    domain: str = ""
+    language: str = ""
+    source: str = ""
+    operations: list[OperationGroup] = field(default_factory=list)
+    complexity: ComplexityLevel | None = None
     conversation_length: int = 1
-    created_at: Optional[datetime] = None
+    created_at: datetime | None = None
     extra: dict[str, Any] = field(default_factory=dict)
 
+    def to_dict(self) -> dict[str, Any]:
+        return _to_plain_value(asdict(self))
 
-@dataclass(frozen=True)
+
+@dataclass
 class Context:
-    """Information available to the model for a task."""
+    """Information available to the model."""
 
     content: str
-    modality: str = DEFAULT_CONTEXT_MODALITY
+    context_type: str = DEFAULT_CONTEXT_TYPE
     metadata: dict[str, Any] = field(default_factory=dict)
 
+    def to_dict(self) -> dict[str, Any]:
+        return _to_plain_value(asdict(self))
 
-@dataclass(frozen=True)
+
+@dataclass
 class Task:
-    """Instruction that should be executed using only the context."""
+    """Instruction to execute using only the provided context."""
 
     instruction: str
     restrictions: dict[str, Any] = field(default_factory=dict)
     metadata: dict[str, Any] = field(default_factory=dict)
 
+    def to_dict(self) -> dict[str, Any]:
+        return _to_plain_value(asdict(self))
 
-@dataclass(frozen=True)
+
+@dataclass
 class ExpectedBehaviour:
-    """Decision and operation labels expected before producing an answer."""
+    """Expected decision and operation groups for an example."""
 
-    decision: Decision
-    operations: tuple[Operation, ...] = field(default_factory=tuple)
-    rationale: Optional[str] = None
+    decision: DecisionType
+    operations: list[OperationGroup] = field(default_factory=list)
+    rationale: str = ""
+
+    def to_dict(self) -> dict[str, Any]:
+        return _to_plain_value(asdict(self))
 
 
-@dataclass(frozen=True)
+@dataclass
 class ExpectedOutput:
-    """Expected final answer, request for context, or grounded refusal."""
+    """Expected answer, context request, or grounded refusal."""
 
     content: str
-    output_type: Optional[str] = None
+    output_type: str = ""
     metadata: dict[str, Any] = field(default_factory=dict)
 
+    def to_dict(self) -> dict[str, Any]:
+        return _to_plain_value(asdict(self))
 
-@dataclass(frozen=True)
+
+@dataclass
 class GroundTruth:
-    """Reference information used by evaluation, not model training."""
+    """Reference data used for validation and evaluation."""
 
-    supporting_facts: tuple[str, ...] = field(default_factory=tuple)
-    evidence: tuple[str, ...] = field(default_factory=tuple)
-    missing_information: tuple[str, ...] = field(default_factory=tuple)
-    decision_justification: Optional[str] = None
-    notes: Optional[str] = None
+    supporting_facts: list[str] = field(default_factory=list)
+    evidence: list[str] = field(default_factory=list)
+    missing_information: list[str] = field(default_factory=list)
+    decision_justification: str = ""
+    notes: str = ""
     extra: dict[str, Any] = field(default_factory=dict)
 
+    def to_dict(self) -> dict[str, Any]:
+        return _to_plain_value(asdict(self))
 
-@dataclass(frozen=True)
-class DatasetExample:
-    """Canonical dataset example used across generation, training, and benchmark."""
+
+@dataclass
+class CanonicalExample:
+    """Canonical example shared by generation, training, and benchmarks."""
 
     metadata: Metadata
     context: Context
@@ -95,3 +118,6 @@ class DatasetExample:
     expected_behaviour: ExpectedBehaviour
     expected_output: ExpectedOutput
     ground_truth: GroundTruth
+
+    def to_dict(self) -> dict[str, Any]:
+        return _to_plain_value(asdict(self))

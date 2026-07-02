@@ -1,11 +1,10 @@
 from abc import ABC, abstractmethod
 from typing import Any, Iterable, Mapping, Sequence
 
-from .constants import Complexity, Decision, Operation
+from .constants import ComplexityLevel, DecisionType, OperationGroup
 from .schema import (
+    CanonicalExample,
     Context,
-    DatasetExample,
-    Document,
     ExpectedBehaviour,
     ExpectedOutput,
     GroundTruth,
@@ -14,23 +13,23 @@ from .schema import (
 
 
 class DocumentLoader(ABC):
-    """Load source documents for dataset generation."""
+    """Load source documents."""
 
     @abstractmethod
-    def load(self, source: str) -> Sequence[Document]:
-        """Return documents loaded from a source."""
+    def load(self, source: str) -> Sequence[str]:
+        """Return document contents loaded from a source."""
 
 
 class ContextBuilder(ABC):
-    """Build contexts from source documents."""
+    """Build contexts from document contents."""
 
     @abstractmethod
-    def build(self, documents: Sequence[Document]) -> Sequence[Context]:
+    def build(self, documents: Sequence[str]) -> Sequence[Context]:
         """Return contexts derived from documents."""
 
 
 class TaskGenerator(ABC):
-    """Generate tasks over a context."""
+    """Generate tasks for a context."""
 
     @abstractmethod
     def generate(self, context: Context) -> Sequence[Task]:
@@ -38,19 +37,19 @@ class TaskGenerator(ABC):
 
 
 class DecisionGenerator(ABC):
-    """Determine the expected context decision for a task."""
+    """Determine the expected context sufficiency decision."""
 
     @abstractmethod
-    def decide(self, context: Context, task: Task) -> Decision:
-        """Return D1, D2, or D3 for the context/task pair."""
+    def decide(self, context: Context, task: Task) -> DecisionType:
+        """Return the expected decision for a context and task."""
 
 
 class OperationClassifier(ABC):
-    """Classify operations required by a task."""
+    """Classify the operation groups required by a task."""
 
     @abstractmethod
-    def classify(self, context: Context, task: Task) -> Sequence[Operation]:
-        """Return one or more operation labels."""
+    def classify(self, context: Context, task: Task) -> Sequence[OperationGroup]:
+        """Return one or more operation groups."""
 
 
 class ComplexityClassifier(ABC):
@@ -61,13 +60,13 @@ class ComplexityClassifier(ABC):
         self,
         context: Context,
         task: Task,
-        operations: Sequence[Operation],
-    ) -> Complexity:
-        """Return a complexity level for the context/task pair."""
+        operations: Sequence[OperationGroup],
+    ) -> ComplexityLevel:
+        """Return the complexity level."""
 
 
 class GroundTruthGenerator(ABC):
-    """Generate reference answers and evidence for evaluation."""
+    """Generate reference output and evidence."""
 
     @abstractmethod
     def generate(
@@ -76,24 +75,32 @@ class GroundTruthGenerator(ABC):
         task: Task,
         expected_behaviour: ExpectedBehaviour,
     ) -> tuple[ExpectedOutput, GroundTruth]:
-        """Return expected output and evaluation ground truth."""
+        """Return expected output and ground truth."""
 
 
 class Validator(ABC):
-    """Validate canonical dataset examples."""
+    """Validate canonical examples."""
 
     @abstractmethod
-    def validate(self, example: DatasetExample) -> bool:
-        """Return whether an example satisfies quality requirements."""
+    def validate(self, example: CanonicalExample) -> bool:
+        """Return whether an example is valid."""
 
 
 class Exporter(ABC):
-    """Convert canonical examples to external dataset formats."""
+    """Convert canonical examples to another format."""
 
     @abstractmethod
     def export(
         self,
-        examples: Iterable[DatasetExample],
+        examples: Iterable[CanonicalExample],
         options: Mapping[str, Any] | None = None,
     ) -> Any:
-        """Return examples converted to a target format."""
+        """Return exported examples."""
+
+
+class AIProvider(ABC):
+    """Minimal interface for text-based AI provider workflows."""
+
+    @abstractmethod
+    def generate(self, prompt: str, response: str | None = None) -> str:
+        """Return a text response for a prompt."""
