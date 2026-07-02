@@ -191,17 +191,17 @@ Disponibilizar a framework.
 
 # Visão Geral
 
-  Fase   Nome                 Estado
-  ------ -------------------- --------
-  1      Arquitetura          ✅
-  2      Core Framework       ⬜
-  3      Providers            ⬜
-  4      Dataset Generation   ⬜
-  5      Exportação           ⬜
-  6      Fine-tuning          ⬜
-  7      Benchmark            ⬜
-  8      Casos de Estudo      ⬜
-  9      Publicação           ⬜
+| Fase | Nome | Estado |
+| ---- | ---- | ------ |
+| 1 | Arquitetura | ✅ |
+| 2 | Core Framework | ⬜ |
+| 3 | Providers | ⬜ |
+| 4 | Dataset Generation | ⬜ |
+| 5 | Exportação | ⬜ |
+| 6 | Fine-tuning | ⬜ |
+| 7 | Benchmark | ⬜ |
+| 8 | Casos de Estudo | ⬜ |
+| 9 | Publicação | ⬜ |
 
 ------------------------------------------------------------------------
 

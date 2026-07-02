@@ -91,17 +91,17 @@ Exporters
 
 ## 5. Interfaces da Framework
 
-  Interface              Responsabilidade
-  ---------------------- ----------------------------------------------------
-  DocumentLoader         Carregar documentos de origem.
-  ContextBuilder         Construir contextos a partir dos documentos.
-  TaskGenerator          Gerar tarefas sobre o contexto.
-  DecisionGenerator      Determinar a decisão esperada (D1, D2 ou D3).
-  OperationClassifier    Classificar as operações (O).
-  ComplexityClassifier   Classificar a complexidade (C).
-  GroundTruthGenerator   Gerar a resposta e as evidências esperadas.
-  Validator              Validar a qualidade dos exemplos.
-  Exporter               Converter o dataset canónico para outros formatos.
+| Interface | Responsabilidade |
+| --------- | ---------------- |
+| DocumentLoader | Carregar documentos de origem. |
+| ContextBuilder | Construir contextos a partir dos documentos. |
+| TaskGenerator | Gerar tarefas sobre o contexto. |
+| DecisionGenerator | Determinar a decisão esperada (D1, D2 ou D3). |
+| OperationClassifier | Classificar as operações (O). |
+| ComplexityClassifier | Classificar a complexidade (C). |
+| GroundTruthGenerator | Gerar a resposta e as evidências esperadas. |
+| Validator | Validar a qualidade dos exemplos. |
+| Exporter | Converter o dataset canónico para outros formatos. |
 
 ------------------------------------------------------------------------
 

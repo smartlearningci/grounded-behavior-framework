@@ -32,26 +32,13 @@ Exemplos:
 
 ## 3. Escala de Complexidade
 
-  -----------------------------------------------------------------------
-  Nível                   Nome                    Características
-  ----------------------- ----------------------- -----------------------
-  C1                      Muito Baixa             Um único facto
-                                                  explícito.
-
-  C2                      Baixa                   Dois ou mais factos
-                                                  explícitos.
-
-  C3                      Média                   Combinação de
-                                                  informação distribuída
-                                                  pelo contexto.
-
-  C4                      Elevada                 Múltiplas operações e
-                                                  restrições.
-
-  C5                      Muito Elevada           Contextos longos,
-                                                  várias dependências e
-                                                  decisões sucessivas.
-  -----------------------------------------------------------------------
+| Nível | Nome | Características |
+| ----- | ---- | --------------- |
+| C1 | Muito Baixa | Um único facto explícito. |
+| C2 | Baixa | Dois ou mais factos explícitos. |
+| C3 | Média | Combinação de informação distribuída pelo contexto. |
+| C4 | Elevada | Múltiplas operações e restrições. |
+| C5 | Muito Elevada | Contextos longos, várias dependências e decisões sucessivas. |
 
 ------------------------------------------------------------------------
 
@@ -100,10 +87,10 @@ Cada exemplo deverá possuir pelo menos:
 
 Exemplo:
 
-  Campo          Valor
-  -------------- -------
-  Operação       O3.2
-  Complexidade   C3
+| Campo | Valor |
+| ----- | ----- |
+| Operação | O3.2 |
+| Complexidade | C3 |
 
 Esta classificação permitirá analisar os modelos por tipo de operação e
 por nível de dificuldade.

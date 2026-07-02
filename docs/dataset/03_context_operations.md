@@ -34,21 +34,12 @@ Encontrar informação explicitamente presente no contexto.
 
 ### Suboperações
 
-  ------------------------------------------------------------------------
-  ID          Operação                     Descrição
-  ----------- ---------------------------- -------------------------------
-  O1.1        Identificar entidades        Pessoas, locais, organizações,
-                                           objetos.
-
-  O1.2        Identificar valores          Datas, horas, quantidades,
-                                           preços, medidas.
-
-  O1.3        Identificar factos           Localizar afirmações
-                                           explícitas.
-
-  O1.4        Identificar relações         Relações descritas diretamente
-              explícitas                   no texto.
-  ------------------------------------------------------------------------
+| ID | Operação | Descrição |
+| -- | -------- | --------- |
+| O1.1 | Identificar entidades | Pessoas, locais, organizações, objetos. |
+| O1.2 | Identificar valores | Datas, horas, quantidades, preços, medidas. |
+| O1.3 | Identificar factos | Localizar afirmações explícitas. |
+| O1.4 | Identificar relações explícitas | Relações descritas diretamente no texto. |
 
 ------------------------------------------------------------------------
 
@@ -61,21 +52,12 @@ contexto.
 
 ### Suboperações
 
-  ------------------------------------------------------------------------
-  ID          Operação                     Descrição
-  ----------- ---------------------------- -------------------------------
-  O2.1        Explicar                     Explicar um conceito presente
-                                           no contexto.
-
-  O2.2        Interpretar                  Inferir o significado de
-                                           expressões explícitas.
-
-  O2.3        Classificar                  Classificar elementos segundo
-                                           critérios do contexto.
-
-  O2.4        Comparar                     Comparar elementos utilizando
-                                           apenas o contexto.
-  ------------------------------------------------------------------------
+| ID | Operação | Descrição |
+| -- | -------- | --------- |
+| O2.1 | Explicar | Explicar um conceito presente no contexto. |
+| O2.2 | Interpretar | Inferir o significado de expressões explícitas. |
+| O2.3 | Classificar | Classificar elementos segundo critérios do contexto. |
+| O2.4 | Comparar | Comparar elementos utilizando apenas o contexto. |
 
 ------------------------------------------------------------------------
 
@@ -87,20 +69,12 @@ Combinar diferentes partes do contexto para produzir uma resposta.
 
 ### Suboperações
 
-  ------------------------------------------------------------------------
-  ID          Operação                     Descrição
-  ----------- ---------------------------- -------------------------------
-  O3.1        Integrar factos              Combinar dois ou mais factos.
-
-  O3.2        Relacionar entidades         Estabelecer relações entre
-                                           elementos.
-
-  O3.3        Ordenar                      Organizar informação
-                                           cronológica ou logicamente.
-
-  O3.4        Identificar dependências     Relações de causa, consequência
-                                           ou pertença quando explícitas.
-  ------------------------------------------------------------------------
+| ID | Operação | Descrição |
+| -- | -------- | --------- |
+| O3.1 | Integrar factos | Combinar dois ou mais factos. |
+| O3.2 | Relacionar entidades | Estabelecer relações entre elementos. |
+| O3.3 | Ordenar | Organizar informação cronológica ou logicamente. |
+| O3.4 | Identificar dependências | Relações de causa, consequência ou pertença quando explícitas. |
 
 ------------------------------------------------------------------------
 
@@ -112,19 +86,12 @@ Avaliar afirmações utilizando exclusivamente o contexto.
 
 ### Suboperações
 
-  ------------------------------------------------------------------------
-  ID          Operação                     Descrição
-  ----------- ---------------------------- -------------------------------
-  O4.1        Confirmar                    Confirmar afirmações.
-
-  O4.2        Refutar                      Corrigir afirmações incorretas.
-
-  O4.3        Justificar                   Fundamentar respostas com
-                                           evidências do contexto.
-
-  O4.4        Detetar inconsistências      Identificar contradições
-                                           existentes no contexto.
-  ------------------------------------------------------------------------
+| ID | Operação | Descrição |
+| -- | -------- | --------- |
+| O4.1 | Confirmar | Confirmar afirmações. |
+| O4.2 | Refutar | Corrigir afirmações incorretas. |
+| O4.3 | Justificar | Fundamentar respostas com evidências do contexto. |
+| O4.4 | Detetar inconsistências | Identificar contradições existentes no contexto. |
 
 ------------------------------------------------------------------------
 
@@ -137,13 +104,13 @@ significado.
 
 ### Suboperações
 
-  ID     Operação      Descrição
-  ------ ------------- ------------------------------------------------
-  O5.1   Resumir       Produzir um resumo fiel.
-  O5.2   Reformular    Reescrever mantendo o significado.
-  O5.3   Simplificar   Adaptar a linguagem ao destinatário.
-  O5.4   Estruturar    Converter em listas, tabelas ou tópicos.
-  O5.5   Extrair       Extrair apenas determinado tipo de informação.
+| ID | Operação | Descrição |
+| -- | -------- | --------- |
+| O5.1 | Resumir | Produzir um resumo fiel. |
+| O5.2 | Reformular | Reescrever mantendo o significado. |
+| O5.3 | Simplificar | Adaptar a linguagem ao destinatário. |
+| O5.4 | Estruturar | Converter em listas, tabelas ou tópicos. |
+| O5.5 | Extrair | Extrair apenas determinado tipo de informação. |
 
 ------------------------------------------------------------------------
 
@@ -156,21 +123,12 @@ resposta.
 
 ### Suboperações
 
-  ------------------------------------------------------------------------
-  ID          Operação                     Descrição
-  ----------- ---------------------------- -------------------------------
-  O6.1        Limitar extensão             Número de palavras, frases ou
-                                           caracteres.
-
-  O6.2        Controlar formato            JSON, lista, tabela, texto
-                                           simples, etc.
-
-  O6.3        Controlar idioma             Produzir a resposta na língua
-                                           indicada.
-
-  O6.4        Resposta fechada             Sim/Não, verdadeiro/falso ou
-                                           opções definidas.
-  ------------------------------------------------------------------------
+| ID | Operação | Descrição |
+| -- | -------- | --------- |
+| O6.1 | Limitar extensão | Número de palavras, frases ou caracteres. |
+| O6.2 | Controlar formato | JSON, lista, tabela, texto simples, etc. |
+| O6.3 | Controlar idioma | Produzir a resposta na língua indicada. |
+| O6.4 | Resposta fechada | Sim/Não, verdadeiro/falso ou opções definidas. |
 
 ------------------------------------------------------------------------
 
@@ -183,21 +141,12 @@ contexto disponível.
 
 ### Suboperações
 
-  ------------------------------------------------------------------------
-  ID          Operação                     Descrição
-  ----------- ---------------------------- -------------------------------
-  O7.1        Selecionar secções           Utilizar apenas parte do
-                                           contexto.
-
-  O7.2        Ignorar informação           Desconsiderar informação
-                                           irrelevante indicada na tarefa.
-
-  O7.3        Aplicar regras               Executar regras explícitas
-                                           fornecidas na tarefa.
-
-  O7.4        Combinar instruções          Cumprir múltiplas instruções
-                                           simultaneamente.
-  ------------------------------------------------------------------------
+| ID | Operação | Descrição |
+| -- | -------- | --------- |
+| O7.1 | Selecionar secções | Utilizar apenas parte do contexto. |
+| O7.2 | Ignorar informação | Desconsiderar informação irrelevante indicada na tarefa. |
+| O7.3 | Aplicar regras | Executar regras explícitas fornecidas na tarefa. |
+| O7.4 | Combinar instruções | Cumprir múltiplas instruções simultaneamente. |
 
 ------------------------------------------------------------------------
 
