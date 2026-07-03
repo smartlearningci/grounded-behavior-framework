@@ -1,0 +1,26 @@
+document_loader:
+  provider: manual
+
+context_builder:
+  provider: manual
+
+task_generator:
+  provider: manual
+
+decision_generator:
+  provider: manual
+
+operation_classifier:
+  provider: manual
+
+complexity_classifier:
+  provider: manual
+
+ground_truth_generator:
+  provider: manual
+
+validator:
+  provider: manual
+
+exporter:
+  provider: manual
