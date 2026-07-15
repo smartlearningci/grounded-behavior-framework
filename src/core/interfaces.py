@@ -1,3 +1,5 @@
+"""Contratos abstratos para as etapas e providers do framework."""
+
 from abc import ABC, abstractmethod
 from typing import Any, Iterable, Mapping, Sequence
 
@@ -13,47 +15,71 @@ from .schema import (
 
 
 class DocumentLoader(ABC):
-    """Load source documents."""
+    """Contrato para obter documentos a partir de uma origem.
+
+    O objetivo é isolar o acesso à fonte; as implementações produzem uma
+    sequência de conteúdos textuais que alimenta a construção de contextos.
+    """
 
     @abstractmethod
     def load(self, source: str) -> Sequence[str]:
-        """Return document contents loaded from a source."""
+        """Carrega ``source`` e devolve os textos dos documentos encontrados."""
 
 
 class ContextBuilder(ABC):
-    """Build contexts from document contents."""
+    """Contrato para transformar documentos em contextos estruturados.
+
+    As implementações recebem textos brutos e devolvem objetos ``Context``
+    que podem ser usados pelas restantes etapas do pipeline.
+    """
 
     @abstractmethod
     def build(self, documents: Sequence[str]) -> Sequence[Context]:
-        """Return contexts derived from documents."""
+        """Constrói e devolve os contextos derivados de ``documents``."""
 
 
 class TaskGenerator(ABC):
-    """Generate tasks for a context."""
+    """Contrato para criar tarefas adequadas a um contexto.
+
+    O output é uma sequência de objetos ``Task`` candidatos, cada um com uma
+    instrução que deverá ser resolvida com a informação do contexto recebido.
+    """
 
     @abstractmethod
     def generate(self, context: Context) -> Sequence[Task]:
-        """Return candidate tasks for a context."""
+        """Gera e devolve tarefas candidatas para ``context``."""
 
 
 class DecisionGenerator(ABC):
-    """Determine the expected context sufficiency decision."""
+    """Contrato para avaliar se o contexto permite executar uma tarefa.
+
+    A avaliação produz um ``DecisionType`` que indica suficiência,
+    insuficiência ou incompatibilidade da tarefa.
+    """
 
     @abstractmethod
     def decide(self, context: Context, task: Task) -> DecisionType:
-        """Return the expected decision for a context and task."""
+        """Devolve a decisão esperada para o par ``context`` e ``task``."""
 
 
 class OperationClassifier(ABC):
-    """Classify the operation groups required by a task."""
+    """Contrato para identificar as operações necessárias numa tarefa.
+
+    O resultado contém um ou mais ``OperationGroup`` e descreve o tipo de
+    raciocínio ou transformação exigido pelo exemplo.
+    """
 
     @abstractmethod
     def classify(self, context: Context, task: Task) -> Sequence[OperationGroup]:
-        """Return one or more operation groups."""
+        """Classifica e devolve as operações requeridas pelo par recebido."""
 
 
 class ComplexityClassifier(ABC):
-    """Classify the cognitive complexity of an example."""
+    """Contrato para atribuir complexidade cognitiva a um exemplo.
+
+    Combina o contexto, a tarefa e as operações classificadas para produzir
+    um único ``ComplexityLevel``.
+    """
 
     @abstractmethod
     def classify(
@@ -62,11 +88,15 @@ class ComplexityClassifier(ABC):
         task: Task,
         operations: Sequence[OperationGroup],
     ) -> ComplexityLevel:
-        """Return the complexity level."""
+        """Calcula e devolve o nível de complexidade dos dados recebidos."""
 
 
 class GroundTruthGenerator(ABC):
-    """Generate reference output and evidence."""
+    """Contrato para gerar a resposta de referência e a sua fundamentação.
+
+    O resultado agrega um ``ExpectedOutput`` com a resposta esperada e um
+    ``GroundTruth`` com evidências úteis para validação e avaliação.
+    """
 
     @abstractmethod
     def generate(
@@ -75,19 +105,27 @@ class GroundTruthGenerator(ABC):
         task: Task,
         expected_behaviour: ExpectedBehaviour,
     ) -> tuple[ExpectedOutput, GroundTruth]:
-        """Return expected output and ground truth."""
+        """Devolve a resposta esperada e o ground truth do exemplo."""
 
 
 class Validator(ABC):
-    """Validate canonical examples."""
+    """Contrato para verificar a validade de exemplos canónicos.
+
+    As implementações devolvem um booleano: ``True`` para um exemplo aceite e
+    ``False`` quando o exemplo viola as regras de validação.
+    """
 
     @abstractmethod
     def validate(self, example: CanonicalExample) -> bool:
-        """Return whether an example is valid."""
+        """Valida ``example`` e devolve se este deve ser aceite."""
 
 
 class Exporter(ABC):
-    """Convert canonical examples to another format."""
+    """Contrato para converter exemplos canónicos num formato de destino.
+
+    O output depende da implementação e das opções fornecidas, permitindo
+    exportar para ficheiros, objetos serializáveis ou integrações externas.
+    """
 
     @abstractmethod
     def export(
@@ -95,12 +133,16 @@ class Exporter(ABC):
         examples: Iterable[CanonicalExample],
         options: Mapping[str, Any] | None = None,
     ) -> Any:
-        """Return exported examples."""
+        """Exporta ``examples`` segundo ``options`` e devolve o resultado."""
 
 
 class AIProvider(ABC):
-    """Minimal interface for text-based AI provider workflows."""
+    """Contrato mínimo para providers de geração de texto.
+
+    Uniformiza providers manuais e APIs: todos recebem um prompt e devolvem
+    texto, podendo aceitar uma resposta já disponível para evitar nova geração.
+    """
 
     @abstractmethod
     def generate(self, prompt: str, response: str | None = None) -> str:
-        """Return a text response for a prompt."""
+        """Devolve ``response`` quando fornecida ou gera texto para ``prompt``."""

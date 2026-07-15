@@ -1,3 +1,5 @@
+"""Carrega e valida os ficheiros YAML que configuram o pipeline."""
+
 from pathlib import Path
 from typing import Any
 
@@ -18,7 +20,12 @@ REQUIRED_PIPELINE_SECTIONS = (
 
 
 def load_yaml_config(path: str | Path) -> dict[str, Any]:
-    """Load a YAML configuration file as a dictionary."""
+    """Carrega um ficheiro YAML e devolve a sua raiz como dicionário.
+
+    Um ficheiro vazio produz um dicionário vazio. Uma raiz YAML que não seja
+    um mapeamento é rejeitada, porque as configurações do projeto são sempre
+    representadas por pares chave/valor.
+    """
     config_path = Path(path)
 
     with config_path.open("r", encoding="utf-8") as file:
@@ -34,7 +41,11 @@ def load_yaml_config(path: str | Path) -> dict[str, Any]:
 
 
 def validate_pipeline_config(config: dict[str, Any]) -> None:
-    """Validate that all required pipeline sections are present."""
+    """Confirma que a configuração contém todas as etapas obrigatórias.
+
+    Não devolve valor quando a configuração é válida. Se faltarem etapas,
+    lança ``ValueError`` com a lista das secções em falta.
+    """
     missing_sections = [
         section
         for section in REQUIRED_PIPELINE_SECTIONS
@@ -47,7 +58,11 @@ def validate_pipeline_config(config: dict[str, Any]) -> None:
 
 
 def load_pipeline_config(path: str | Path) -> dict[str, Any]:
-    """Load and validate a pipeline configuration file."""
+    """Carrega uma configuração YAML e valida a estrutura do pipeline.
+
+    Devolve o dicionário validado, pronto para ser entregue à factory de
+    componentes. Os erros de leitura ou validação são propagados ao chamador.
+    """
     config = load_yaml_config(path)
     validate_pipeline_config(config)
     return config

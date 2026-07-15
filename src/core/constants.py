@@ -1,3 +1,5 @@
+"""Define valores estáveis partilhados pelo schema e pelo pipeline."""
+
 from enum import Enum
 
 
@@ -6,7 +8,11 @@ DEFAULT_CONTEXT_TYPE = "text"
 
 
 class DecisionType(str, Enum):
-    """Context sufficiency decisions defined by the framework."""
+    """Representa a decisão sobre a adequação do contexto a uma tarefa.
+
+    O resultado é um código textual: contexto suficiente, contexto
+    insuficiente ou tarefa incompatível com o contexto disponível.
+    """
 
     D1_CONTEXT_SUFFICIENT = "D1"
     D2_CONTEXT_INSUFFICIENT = "D2"
@@ -14,7 +20,11 @@ class DecisionType(str, Enum):
 
 
 class ComplexityLevel(str, Enum):
-    """Cognitive complexity levels for canonical examples."""
+    """Representa o nível de complexidade cognitiva de um exemplo.
+
+    Os valores textuais de C1 a C5 permitem classificar e serializar exemplos
+    por dificuldade crescente sem depender de números sem significado.
+    """
 
     C1 = "C1"
     C2 = "C2"
@@ -24,7 +34,11 @@ class ComplexityLevel(str, Enum):
 
 
 class OperationGroup(str, Enum):
-    """Top-level context operation groups."""
+    """Identifica as operações de alto nível exigidas por uma tarefa.
+
+    Cada valor textual descreve uma família de operações e pode ser incluído
+    nos metadados e no comportamento esperado de um exemplo canónico.
+    """
 
     O1_LOCALIZE = "O1"
     O2_UNDERSTAND = "O2"
