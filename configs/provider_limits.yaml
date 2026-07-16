@@ -1,0 +1,55 @@
+# Limites locais conservadores e configuráveis para segurança operacional.
+# Não representam quotas oficiais; os limites reais dos providers podem mudar.
+manual:
+  enabled: false
+  min_delay_seconds: 0
+  max_requests_per_minute: null
+  max_requests_per_day: null
+  max_consecutive_requests: 1
+  max_job_attempts: 1
+  cooldown_after_rate_limit_seconds: 60
+
+gemini:
+  enabled: true
+  min_delay_seconds: 6
+  max_requests_per_minute: null
+  max_requests_per_day: null
+  max_consecutive_requests: 1
+  max_job_attempts: 3
+  cooldown_after_rate_limit_seconds: 60
+
+groq:
+  enabled: true
+  min_delay_seconds: 6
+  max_requests_per_minute: null
+  max_requests_per_day: null
+  max_consecutive_requests: 1
+  max_job_attempts: 3
+  cooldown_after_rate_limit_seconds: 60
+
+mistral:
+  enabled: true
+  min_delay_seconds: 6
+  max_requests_per_minute: null
+  max_requests_per_day: null
+  max_consecutive_requests: 1
+  max_job_attempts: 3
+  cooldown_after_rate_limit_seconds: 60
+
+openrouter:
+  enabled: true
+  min_delay_seconds: 12
+  max_requests_per_minute: null
+  max_requests_per_day: null
+  max_consecutive_requests: 1
+  max_job_attempts: 3
+  cooldown_after_rate_limit_seconds: 90
+
+cerebras:
+  enabled: true
+  min_delay_seconds: 6
+  max_requests_per_minute: null
+  max_requests_per_day: null
+  max_consecutive_requests: 1
+  max_job_attempts: 3
+  cooldown_after_rate_limit_seconds: 60

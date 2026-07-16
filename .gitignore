@@ -8,6 +8,8 @@ __pycache__/
 datasets/generated/
 datasets/hf/
 prompts/generated/
+queues/
+runtime/
 reports/
 experiments/
 *.zip
