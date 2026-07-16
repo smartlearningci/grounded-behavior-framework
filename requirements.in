@@ -1,5 +1,6 @@
 PyYAML
 google-genai
 groq
+openpyxl
 requests
 pytest
