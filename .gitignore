@@ -8,9 +8,12 @@ __pycache__/
 datasets/generated/
 datasets/hf/
 datasets/raw/
+datasets/validated/
+datasets/invalid/
 prompts/generated/
 queues/
 runtime/
+artifacts/archive/
 reports/
 experiments/
 *.zip

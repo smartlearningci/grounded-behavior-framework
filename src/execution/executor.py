@@ -18,7 +18,7 @@ from src.scheduling.models import GenerationJob
 from src.scheduling.queue import GenerationQueue
 from src.scheduling.scheduler import RoundRobinScheduler
 
-from .config import ProviderRuntimeConfig
+from .config import ProviderRuntimeConfig, ValidationRuntimeConfig
 from .errors import (
     PromptFileError,
     ProviderAuthenticationError,
@@ -29,6 +29,8 @@ from .errors import (
     sanitize_error,
 )
 from .result_writer import ResultWriter, validate_existing_result
+from src.validation.reporting import write_validation_sidecar
+from src.validation.result_validator import validate_result_file
 
 
 PLACEHOLDER_MODELS = {"", "free-model-fallback", "provider-selected"}
@@ -78,6 +80,7 @@ class GenerationExecutor:
         time_source: Callable[[], float] = time.monotonic,
         sleep_function: Callable[[float], None] = time.sleep,
         provider_factory: Callable[[str], AIProvider] | None = None,
+        validation_config: ValidationRuntimeConfig | None = None,
     ) -> None:
         """Recebe todas as dependências mutáveis para permitir mocks."""
         self.queue = queue
@@ -90,6 +93,9 @@ class GenerationExecutor:
         self.time_source = time_source
         self.sleep_function = sleep_function
         self.provider_factory = provider_factory or _default_provider_factory
+        self.validation_config = validation_config or getattr(
+            runtime_configs, "validation", ValidationRuntimeConfig()
+        )
         self.provider_instances: dict[str, AIProvider] = {}
         self.consecutive_failures: Counter[str] = Counter()
         self.last_records: list[ExecutionRecord] = []
@@ -184,12 +190,42 @@ class GenerationExecutor:
         """Executa e persiste um job, normalizando qualquer falha do provider."""
         started_clock = self.time_source()
         started_at = _utc_now()
+        structural_retry = (
+            job.status == "retry_wait"
+            and job.last_error.startswith("Structural validation failed:")
+        )
         self.scheduler.mark_running(job)
         existing = self.result_writer.success_path(job)
         try:
             self.save_limiter_state()
+            if structural_retry and existing.exists():
+                self.result_writer.archive_invalid_canonical(job)
+            elif (
+                overwrite_results
+                and existing.exists()
+                and self._validate_immediately()
+                and not validate_result_file(existing).valid
+            ):
+                self.result_writer.archive_invalid_canonical(job)
             if existing.exists() and not overwrite_results:
-                validate_existing_result(existing)
+                if self._validate_immediately():
+                    validation = validate_result_file(existing)
+                    write_validation_sidecar(
+                        validation,
+                        existing.with_name(
+                            existing.name.replace(".result.json", ".validation.json")
+                        ),
+                        overwrite=True,
+                    )
+                    if not validation.valid:
+                        self._apply_structural_failure(job, validation.status)
+                        return self._record(
+                            job, job.status, str(existing),
+                            f"Structural validation failed: {validation.status}",
+                            started_clock,
+                        )
+                else:
+                    validate_existing_result(existing)
                 self.scheduler.mark_completed(job, str(existing))
                 self.consecutive_failures[job.provider] = 0
                 return self._record(job, "skipped_existing", str(existing), "", started_clock)
@@ -199,6 +235,34 @@ class GenerationExecutor:
             provider = self._provider(job.provider)
             result = provider.generate(request)
             completed_at = _utc_now()
+            if self._validate_immediately():
+                attempt_path = self.result_writer.write_attempt_result(
+                    job, request, result, prompt_text, started_at, completed_at
+                )
+                validation = validate_result_file(attempt_path)
+                sidecar = attempt_path.with_name(
+                    attempt_path.name.replace(".result.json", ".validation.json")
+                )
+                write_validation_sidecar(validation, sidecar, overwrite=False)
+                if not validation.valid:
+                    self._apply_structural_failure(job, validation.status)
+                    self.save_limiter_state()
+                    return self._record(
+                        job,
+                        job.status,
+                        str(attempt_path),
+                        f"Structural validation failed: {validation.status}",
+                        started_clock,
+                    )
+                result_path = self.result_writer.promote_attempt(
+                    attempt_path, job, overwrite=overwrite_results
+                )
+                self.scheduler.mark_completed(job, str(result_path))
+                self.consecutive_failures[job.provider] = 0
+                self.save_limiter_state()
+                return self._record(
+                    job, "completed", str(result_path), "", started_clock
+                )
             result_path = self.result_writer.write_success(
                 job,
                 request,
@@ -323,6 +387,23 @@ class GenerationExecutor:
         threshold = self.runtime_configs[job.provider].stop_provider_after_consecutive_failures
         if isinstance(error, ProviderAuthenticationError) or self.consecutive_failures[job.provider] >= threshold:
             self.scheduler.pause_provider(job.provider)
+
+    def _validate_immediately(self) -> bool:
+        """Indica se a validação estrutural está ativa nesta execução."""
+        return (
+            self.validation_config.enabled
+            and self.validation_config.validate_immediately
+        )
+
+    def _apply_structural_failure(self, job: GenerationJob, status: str) -> None:
+        """Agenda retry estrutural limitado sem mudar o provider atribuído."""
+        error = f"Structural validation failed: {status}"
+        retryable = self.validation_config.retry_status(status)
+        attempts = self.provider_configs[job.provider].max_job_attempts
+        if retryable and job.attempt_count < attempts:
+            self.scheduler.mark_retry_wait(job, error)
+        else:
+            self.scheduler.mark_failed(job, error)
 
     def _record(
         self,

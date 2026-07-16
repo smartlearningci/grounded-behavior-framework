@@ -47,7 +47,81 @@ class ResultWriter:
         if path.exists() and not overwrite:
             raise FileExistsError(f"Successful result already exists: {path}")
         config = self._config(job.provider)
-        payload = {
+        payload = self._success_payload(
+            job, request, result, prompt_text, started_at, completed_at
+        )
+        if config.save_prompt_copy:
+            _atomic_text(
+                path.with_name(f"{job.chunk_id}.prompt.txt"),
+                prompt_text,
+                overwrite=overwrite,
+            )
+        _atomic_json(path, payload, overwrite=overwrite)
+        return path
+
+    def write_attempt_result(
+        self,
+        job: GenerationJob,
+        request: GenerationRequest,
+        result: GenerationResult,
+        prompt_text: str,
+        started_at: str,
+        completed_at: str,
+    ) -> Path:
+        """Guarda uma tentativa raw versionada que nunca é substituída."""
+        config = self._config(job.provider)
+        directory = Path(config.output_directory) / "attempts"
+        base = directory / f"{job.chunk_id}.attempt-{job.attempt_count}.result.json"
+        path = _unused_attempt_result(base)
+        payload = self._success_payload(
+            job, request, result, prompt_text, started_at, completed_at
+        )
+        _atomic_json(path, payload, overwrite=False)
+        prompt_copy = Path(config.output_directory) / f"{job.chunk_id}.prompt.txt"
+        if config.save_prompt_copy and not prompt_copy.exists():
+            _atomic_text(prompt_copy, prompt_text, overwrite=False)
+        return path
+
+    def promote_attempt(
+        self,
+        attempt_path: str | Path,
+        job: GenerationJob,
+        overwrite: bool = False,
+    ) -> Path:
+        """Publica uma tentativa validada como resultado canónico."""
+        source = Path(attempt_path)
+        if not source.is_file():
+            raise ResultFileError(f"Validated attempt does not exist: {source}")
+        destination = self.success_path(job)
+        _atomic_bytes(destination, source.read_bytes(), overwrite)
+        return destination
+
+    def archive_invalid_canonical(self, job: GenerationJob) -> Path | None:
+        """Move um canonical inválido conhecido para histórico sem o apagar."""
+        source = self.success_path(job)
+        if not source.exists():
+            return None
+        attempt_number = max(1, job.attempt_count - 1)
+        base = source.parent / "attempts" / (
+            f"{job.chunk_id}.attempt-{attempt_number}.result.json"
+        )
+        destination = _unused_attempt_result(base)
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        os.replace(source, destination)
+        return destination
+
+    def _success_payload(
+        self,
+        job: GenerationJob,
+        request: GenerationRequest,
+        result: GenerationResult,
+        prompt_text: str,
+        started_at: str,
+        completed_at: str,
+    ) -> dict[str, object]:
+        """Constrói o envelope comum para tentativas e resultados canónicos."""
+        config = self._config(job.provider)
+        return {
             "schema_version": "1.0",
             "job": {
                 "job_id": job.job_id,
@@ -86,14 +160,6 @@ class ResultWriter:
                 "duration_seconds": _duration(started_at, completed_at),
             },
         }
-        if config.save_prompt_copy:
-            _atomic_text(
-                path.with_name(f"{job.chunk_id}.prompt.txt"),
-                prompt_text,
-                overwrite=overwrite,
-            )
-        _atomic_json(path, payload, overwrite=overwrite)
-        return path
 
     def write_failure_record(
         self,
@@ -174,6 +240,27 @@ def _atomic_text(path: Path, text: str, overwrite: bool) -> None:
             temporary.unlink(missing_ok=True)
 
 
+def _atomic_bytes(path: Path, content: bytes, overwrite: bool) -> None:
+    """Publica bytes sem os reinterpretar ou truncar."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if path.exists() and not overwrite:
+        raise FileExistsError(f"Result artifact already exists: {path}")
+    temporary: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="wb", dir=path.parent, prefix=f".{path.name}.",
+            suffix=".tmp", delete=False,
+        ) as file:
+            file.write(content)
+            temporary = Path(file.name)
+        if path.exists() and not overwrite:
+            raise FileExistsError(f"Result artifact already exists: {path}")
+        os.replace(temporary, path)
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
+
+
 def _unused_version(base: Path) -> Path:
     """Escolhe um nome livre, versionando colisões da mesma tentativa."""
     if not base.exists():
@@ -181,6 +268,20 @@ def _unused_version(base: Path) -> Path:
     index = 2
     while True:
         candidate = base.with_name(base.name.replace(".failure.json", f"-{index}.failure.json"))
+        if not candidate.exists():
+            return candidate
+        index += 1
+
+
+def _unused_attempt_result(base: Path) -> Path:
+    """Versiona colisões sem substituir tentativas raw anteriores."""
+    if not base.exists():
+        return base
+    index = 2
+    while True:
+        candidate = base.with_name(
+            base.name.replace(".result.json", f"-{index}.result.json")
+        )
         if not candidate.exists():
             return candidate
         index += 1

@@ -18,6 +18,46 @@ RUNTIME_FIELDS = {
     "save_raw_metadata",
     "stop_provider_after_consecutive_failures",
 }
+VALIDATION_FIELDS = {
+    "enabled",
+    "validate_immediately",
+    "retry_invalid_json",
+    "retry_wrong_example_count",
+    "retry_invalid_schema",
+    "retry_answer_not_in_context",
+    "preserve_invalid_raw",
+}
+
+
+@dataclass
+class ValidationRuntimeConfig:
+    """Controla validação imediata e estados estruturais repetíveis."""
+
+    enabled: bool = False
+    validate_immediately: bool = False
+    retry_invalid_json: bool = False
+    retry_wrong_example_count: bool = False
+    retry_invalid_schema: bool = False
+    retry_answer_not_in_context: bool = False
+    preserve_invalid_raw: bool = True
+
+    def __post_init__(self) -> None:
+        """Exige booleanos explícitos em todas as opções."""
+        for field_name in VALIDATION_FIELDS:
+            if not isinstance(getattr(self, field_name), bool):
+                raise ValueError(f"validation.{field_name} must be boolean")
+
+    def retry_status(self, status: str) -> bool:
+        """Indica se um estado inválido deve regressar a retry_wait."""
+        return bool(getattr(self, f"retry_{status}", False))
+
+
+class GenerationRuntimeConfigs(dict[str, "ProviderRuntimeConfig"]):
+    """Mantém compatibilidade de mapping e anexa validação global."""
+
+    def __init__(self, validation: ValidationRuntimeConfig) -> None:
+        super().__init__()
+        self.validation = validation
 
 
 @dataclass
@@ -73,7 +113,7 @@ class ProviderRuntimeConfig:
 
 def load_generation_runtime_config(
     path: str | Path,
-) -> dict[str, ProviderRuntimeConfig]:
+) -> GenerationRuntimeConfigs:
     """Lê YAML e exige uma secção completa por provider API."""
     config_path = Path(path)
     if not config_path.is_file():
@@ -82,14 +122,31 @@ def load_generation_runtime_config(
         data = yaml.safe_load(file)
     if not isinstance(data, dict):
         raise ValueError("Runtime config root must be a mapping")
-    unknown = sorted(set(data) - set(RUNTIME_PROVIDERS))
+    unknown = sorted(set(data) - set(RUNTIME_PROVIDERS) - {"validation"})
     if unknown:
         raise ValueError("Unknown runtime providers: " + ", ".join(unknown))
     missing = [provider for provider in RUNTIME_PROVIDERS if provider not in data]
     if missing:
         raise ValueError("Missing runtime providers: " + ", ".join(missing))
 
-    configs: dict[str, ProviderRuntimeConfig] = {}
+    validation_values = data.get("validation")
+    if validation_values is None:
+        validation = ValidationRuntimeConfig()
+    else:
+        if not isinstance(validation_values, dict):
+            raise ValueError("Runtime section 'validation' must be a mapping")
+        missing_validation = sorted(VALIDATION_FIELDS - set(validation_values))
+        unknown_validation = sorted(set(validation_values) - VALIDATION_FIELDS)
+        if missing_validation:
+            raise ValueError(
+                "Runtime validation is missing fields: " + ", ".join(missing_validation)
+            )
+        if unknown_validation:
+            raise ValueError(
+                "Runtime validation has unknown fields: " + ", ".join(unknown_validation)
+            )
+        validation = ValidationRuntimeConfig(**validation_values)
+    configs = GenerationRuntimeConfigs(validation)
     for provider in RUNTIME_PROVIDERS:
         values = data[provider]
         if not isinstance(values, dict):
