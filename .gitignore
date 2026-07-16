@@ -7,6 +7,7 @@ __pycache__/
 
 datasets/generated/
 datasets/hf/
+datasets/raw/
 prompts/generated/
 queues/
 runtime/

@@ -1,0 +1,49 @@
+gemini:
+  system_prompt: null
+  temperature: 0.8
+  max_tokens: null
+  require_json: true
+  output_directory: datasets/raw/gemini
+  save_prompt_copy: true
+  save_raw_metadata: true
+  stop_provider_after_consecutive_failures: 5
+
+groq:
+  system_prompt: "Devolve apenas JSON válido e segue rigorosamente a instrução."
+  temperature: 0.8
+  max_tokens: 4000
+  require_json: true
+  output_directory: datasets/raw/groq
+  save_prompt_copy: true
+  save_raw_metadata: true
+  stop_provider_after_consecutive_failures: 5
+
+mistral:
+  system_prompt: "Devolve apenas JSON válido. Segue rigorosamente o formato pedido."
+  temperature: 0.8
+  max_tokens: 4000
+  require_json: true
+  output_directory: datasets/raw/mistral
+  save_prompt_copy: true
+  save_raw_metadata: true
+  stop_provider_after_consecutive_failures: 5
+
+openrouter:
+  system_prompt: "És um gerador de dados estruturados. Devolve apenas JSON válido."
+  temperature: 0.8
+  max_tokens: 4000
+  require_json: true
+  output_directory: datasets/raw/openrouter
+  save_prompt_copy: true
+  save_raw_metadata: true
+  stop_provider_after_consecutive_failures: 5
+
+cerebras:
+  system_prompt: "És um gerador de dados estruturados. Devolve apenas JSON válido."
+  temperature: 0.8
+  max_tokens: 4000
+  require_json: true
+  output_directory: datasets/raw/cerebras
+  save_prompt_copy: true
+  save_raw_metadata: true
+  stop_provider_after_consecutive_failures: 5
