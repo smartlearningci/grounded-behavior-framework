@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from src.core.interfaces import AIProvider
+from src.core.interfaces import AIProvider, GenerationRequest, GenerationResult
 from src.providers.gemini_provider import GeminiProvider
 
 
@@ -15,13 +15,17 @@ def test_gemini_provider_uses_api_key_and_default_model(mock_client):
     Resultado esperado: o provider implementa ``AIProvider``, inicializa o
     cliente com a chave e devolve exatamente o texto produzido pelo mock da API.
     """
-    mock_client.return_value.models.generate_content.return_value.text = (
-        "Generated response"
+    mock_response = Mock(
+        text="Generated response",
+        model_version=None,
+        response_id=None,
+        usage_metadata=None,
     )
+    mock_client.return_value.models.generate_content.return_value = mock_response
 
     with patch.dict("os.environ", {"GEMINI_API_KEY": "test-key"}):
         provider = GeminiProvider()
-        result = provider.generate("Test prompt")
+        result = provider.generate(GenerationRequest(prompt="Test prompt"))
 
     assert isinstance(provider, AIProvider)
     mock_client.assert_called_once_with(api_key="test-key")
@@ -29,23 +33,56 @@ def test_gemini_provider_uses_api_key_and_default_model(mock_client):
         model="gemini-3.1-flash-lite",
         contents="Test prompt",
     )
-    assert result == "Generated response"
+    assert isinstance(result, GenerationResult)
+    assert result.text == "Generated response"
+    assert result.provider == "gemini"
+    assert result.requested_model == "gemini-3.1-flash-lite"
+    assert result.actual_model == "gemini-3.1-flash-lite"
 
 
 @patch("src.providers.gemini_provider.genai.Client")
-def test_generate_returns_provided_response_without_calling_api(mock_client):
-    """Requisito: uma resposta fornecida deve ser devolvida imediatamente.
+def test_generate_maps_all_supported_request_fields(mock_client):
+    """Requisito: mapear os parâmetros validados pelo notebook Gemini."""
+    mock_response = Mock(
+        text='  {"ok": true}  ',
+        model_version="gemini-reported-version",
+        response_id="response-123",
+        usage_metadata={"prompt_token_count": 10, "total_token_count": 15},
+    )
+    mock_client.return_value.models.generate_content.return_value = mock_response
 
-    Resultado esperado: o texto fornecido é devolvido sem executar o método
-    ``generate_content`` do cliente Gemini simulado.
-    """
     with patch.dict("os.environ", {"GEMINI_API_KEY": "test-key"}):
         provider = GeminiProvider()
 
-    result = provider.generate("Test prompt", response="Provided response")
+    result = provider.generate(
+        GenerationRequest(
+            prompt="Test prompt",
+            system_prompt="Return JSON",
+            model="gemini-override",
+            temperature=0.8,
+            max_tokens=4000,
+            require_json=True,
+        )
+    )
 
-    assert result == "Provided response"
-    mock_client.return_value.models.generate_content.assert_not_called()
+    call = mock_client.return_value.models.generate_content.call_args
+    assert call.kwargs["model"] == "gemini-override"
+    assert call.kwargs["contents"] == "Test prompt"
+    assert call.kwargs["config"].system_instruction == "Return JSON"
+    assert call.kwargs["config"].temperature == 0.8
+    assert call.kwargs["config"].max_output_tokens == 4000
+    assert call.kwargs["config"].response_mime_type == "application/json"
+    assert result.text == '{"ok": true}'
+    assert result.requested_model == "gemini-override"
+    assert result.actual_model == "gemini-reported-version"
+    assert result.usage == {
+        "prompt_token_count": 10,
+        "total_token_count": 15,
+    }
+    assert result.metadata == {"response_id": "response-123"}
+    assert result.attempts == [
+        {"model": "gemini-override", "attempt": 1, "success": True}
+    ]
 
 
 @patch("src.providers.gemini_provider.genai.Client")
@@ -69,12 +106,18 @@ def test_generate_returns_string_when_response_text_is_empty(mock_client):
     Resultado esperado: quando o SDK não disponibiliza texto, o provider
     normaliza o valor ``None`` para uma string vazia.
     """
-    mock_response = Mock()
-    mock_response.text = None
+    mock_response = Mock(
+        text=None,
+        model_version=None,
+        response_id=None,
+        usage_metadata=None,
+    )
     mock_client.return_value.models.generate_content.return_value = mock_response
 
     with patch.dict("os.environ", {"GEMINI_API_KEY": "test-key"}):
-        result = GeminiProvider().generate("Test prompt")
+        result = GeminiProvider().generate(
+            GenerationRequest(prompt="Test prompt")
+        )
 
-    assert result == ""
-    assert isinstance(result, str)
+    assert result.text == ""
+    assert isinstance(result.text, str)

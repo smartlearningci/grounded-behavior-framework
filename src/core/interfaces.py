@@ -1,6 +1,7 @@
 """Contratos abstratos para as etapas e providers do framework."""
 
 from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
 from typing import Any, Iterable, Mapping, Sequence
 
 from .constants import ComplexityLevel, DecisionType, OperationGroup
@@ -136,13 +137,35 @@ class Exporter(ABC):
         """Exporta ``examples`` segundo ``options`` e devolve o resultado."""
 
 
-class AIProvider(ABC):
-    """Contrato mínimo para providers de geração de texto.
+@dataclass
+class GenerationRequest:
+    """Reúne os parâmetros comuns de um pedido de geração de texto."""
 
-    Uniformiza providers manuais e APIs: todos recebem um prompt e devolvem
-    texto, podendo aceitar uma resposta já disponível para evitar nova geração.
-    """
+    prompt: str
+    system_prompt: str | None = None
+    model: str | None = None
+    model_candidates: list[str] = field(default_factory=list)
+    temperature: float | None = None
+    max_tokens: int | None = None
+    require_json: bool = False
+
+
+@dataclass
+class GenerationResult:
+    """Devolve texto gerado e metadados comuns da comunicação com o provider."""
+
+    text: str
+    provider: str
+    requested_model: str | None = None
+    actual_model: str | None = None
+    usage: dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
+    attempts: list[dict[str, Any]] = field(default_factory=list)
+
+
+class AIProvider(ABC):
+    """Contrato estável para providers usados na geração do dataset."""
 
     @abstractmethod
-    def generate(self, prompt: str, response: str | None = None) -> str:
-        """Devolve ``response`` quando fornecida ou gera texto para ``prompt``."""
+    def generate(self, request: GenerationRequest) -> GenerationResult:
+        """Executa um pedido de geração e devolve texto com a sua proveniência."""

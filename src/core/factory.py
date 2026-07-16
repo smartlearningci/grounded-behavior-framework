@@ -3,10 +3,11 @@
 from typing import Any
 
 from src.core.config import REQUIRED_PIPELINE_SECTIONS, validate_pipeline_config
+from src.core.interfaces import AIProvider
 from src.providers.manual_provider import ManualProvider
 
 
-def create_component(section_name: str, section_config: dict[str, Any]) -> ManualProvider:
+def create_component(section_name: str, section_config: dict[str, Any]) -> AIProvider:
     """Cria o provider configurado para uma secção individual do pipeline.
 
     Atualmente só o provider manual está registado. Devolve uma instância de
@@ -26,7 +27,7 @@ def create_component(section_name: str, section_config: dict[str, Any]) -> Manua
     )
 
 
-def create_pipeline_components(config: dict[str, Any]) -> dict[str, ManualProvider]:
+def create_pipeline_components(config: dict[str, Any]) -> dict[str, AIProvider]:
     """Constrói todos os componentes obrigatórios de um pipeline.
 
     Valida primeiro as secções da configuração e devolve um dicionário que
